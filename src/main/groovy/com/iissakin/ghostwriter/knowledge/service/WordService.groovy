@@ -1,11 +1,8 @@
 package com.iissakin.ghostwriter.knowledge.service
-
 import com.tinkerpop.blueprints.Direction
 import com.tinkerpop.blueprints.Edge
 import com.tinkerpop.blueprints.Vertex
 import com.tinkerpop.blueprints.impls.orient.OrientGraph
-import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 /**
  * User: iissakin
@@ -13,9 +10,6 @@ import org.springframework.stereotype.Component
  */
 @Component
 class WordService extends GraphTransactionalService {
-
-    @Autowired
-    OrientGraphFactory orientGraphFactory
 
     def newWord(String content) {
         withTransaction { OrientGraph graph ->
@@ -43,7 +37,12 @@ class WordService extends GraphTransactionalService {
                 wordVertex = graph.addVertex("class:Word", "content", word)
             }
 
-            Edge follows = graph.addEdge("class:Follows", followerVertex, wordVertex, "follows")
+            Edge follows = wordVertex.getEdges(Direction.IN, "follows").find({it.getVertex(Direction.OUT).properties.content == follower}) as Edge
+            if (!follows) follows = wordVertex.addEdge("follows", followerVertex)
+            if (follows.properties.count == null)
+                follows.setProperty "count", 0
+            else
+                follows.setProperty "count", follows.properties.count + 1
 
             "done"
         }
@@ -60,11 +59,11 @@ class WordService extends GraphTransactionalService {
 
                 word.getEdges(Direction.IN, "Follows").each { edge ->
                     if (!jsonWord.followsIn) jsonWord.followsIn = []
-                    jsonWord.followsIn << edge.getVertex(Direction.OUT).properties.content
+                    jsonWord.followsIn << [word: edge.getVertex(Direction.OUT).properties.content, count: edge.properties.count]
                 }
                 word.getEdges(Direction.OUT, "Follows").each { edge ->
                     if (!jsonWord.followsOut) jsonWord.followsOut = []
-                    jsonWord.followsOut << edge.getVertex(Direction.IN).properties.content
+                    jsonWord.followsOut << [word: edge.getVertex(Direction.IN).properties.content, count: edge.properties.count]
                 }
 
                 words << jsonWord

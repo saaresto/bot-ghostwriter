@@ -1,14 +1,19 @@
 package com.iissakin.ghostwriter.knowledge.service
 
 import com.tinkerpop.blueprints.impls.orient.OrientGraph
+import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.FromString
+import org.springframework.beans.factory.annotation.Autowired
 
 /**
  * User: iissakin
  * Date: 27.02.2016.
  */
 abstract class GraphTransactionalService {
+
+    @Autowired
+    OrientGraphFactory orientGraphFactory
 
     protected <T> T withTransaction(@ClosureParams(value = FromString, options = 'com.tinkerpop.blueprints.impls.orient.OrientGraph') Closure<T> closure) {
         OrientGraph orientGraph = getGraph()

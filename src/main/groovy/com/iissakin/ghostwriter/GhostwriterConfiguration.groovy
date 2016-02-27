@@ -20,7 +20,7 @@ class GhostwriterConfiguration {
     final String DBPASSWORD
 
     @Bean
-    OrientGraphFactory databaseFactory() {
+    OrientGraphFactory graphFactory() {
         new OrientGraphFactory(DBNAME, DBUSER, DBPASSWORD).setupPool(1, 10)
     }
 }
