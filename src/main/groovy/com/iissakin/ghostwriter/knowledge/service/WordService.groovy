@@ -12,28 +12,22 @@ import org.springframework.stereotype.Component
  * Date: 27.02.2016.
  */
 @Component
-class WordService {
+class WordService extends GraphTransactionalService {
 
     @Autowired
     OrientGraphFactory orientGraphFactory
 
     def newWord(String content) {
-        OrientGraph graph = orientGraphFactory.getTx()
-
-        try {
+        withTransaction { OrientGraph graph ->
             Vertex word = graph.addVertex("class:Word")
             word.setProperty("content", content)
-        } finally {
-            graph.shutdown()
-        }
 
-        "done"
+            "done"
+        }
     }
 
     def newRelation(String follower, String word) {
-        OrientGraph graph = orientGraphFactory.getTx()
-
-        try {
+        withTransaction { OrientGraph graph ->
             def vertices = graph.getVerticesOfClass("Word")
             Vertex followerVertex = vertices.find {
                 it.properties.content == follower
@@ -50,18 +44,14 @@ class WordService {
             }
 
             Edge follows = graph.addEdge("class:Follows", followerVertex, wordVertex, "follows")
-        } finally {
-            graph.shutdown()
-        }
 
-        "done"
+            "done"
+        }
     }
 
     def getWords() {
-        OrientGraph graph = ((OrientGraph) OrientGraph.activeGraph) ?: orientGraphFactory.getTx()
-        def words = []
-
-        try {
+        withTransaction { OrientGraph graph ->
+            def words = []
             def vertices = graph.getVerticesOfClass("Word")
             vertices.each { word ->
                 def jsonWord = [:]
@@ -79,12 +69,8 @@ class WordService {
 
                 words << jsonWord
             }
-        } catch (Exception e) {
-            e.printStackTrace()
-        } finally {
-            graph.shutdown()
-        }
 
-        words
+            words
+        }
     }
 }
