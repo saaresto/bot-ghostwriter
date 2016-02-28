@@ -16,6 +16,6 @@ class UpdaterJob {
 
     @Scheduled(initialDelay = 3000L, fixedRate = 10000L)
     void checkForUpdates() {
-        requester.getUpdates(1)
+        requester.getUpdates()
     }
 }

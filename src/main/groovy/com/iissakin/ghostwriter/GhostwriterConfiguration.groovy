@@ -1,6 +1,7 @@
 package com.iissakin.ghostwriter
 
 import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory
+import groovyx.net.http.HTTPBuilder
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -22,5 +23,10 @@ class GhostwriterConfiguration {
     @Bean
     OrientGraphFactory graphFactory() {
         new OrientGraphFactory(DBNAME, DBUSER, DBPASSWORD).setupPool(1, 10)
+    }
+
+    @Bean
+    HTTPBuilder httpBuilder() {
+        new HTTPBuilder()
     }
 }

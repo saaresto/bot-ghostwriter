@@ -9,4 +9,5 @@ class Message extends UnderscoreNotationParceable {
     Integer date
     User from
     Chat chat
+    String text
 }
