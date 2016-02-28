@@ -1,4 +1,7 @@
 package com.iissakin.ghostwriter.knowledge.service
+
+import com.iissakin.ghostwriter.knowledge.util.Follows
+import com.iissakin.ghostwriter.knowledge.util.Word
 import com.tinkerpop.blueprints.Direction
 import com.tinkerpop.blueprints.Edge
 import com.tinkerpop.blueprints.Vertex
@@ -11,38 +14,29 @@ import org.springframework.stereotype.Component
 @Component
 class WordService extends GraphTransactionalService {
 
-    def newWord(String content) {
-        withTransaction { OrientGraph graph ->
-            Vertex word = graph.addVertex("class:Word")
-            word.setProperty("content", content)
-
-            "done"
-        }
-    }
-
     def newRelation(String follower, String word) {
         withTransaction { OrientGraph graph ->
             def vertices = graph.getVerticesOfClass("Word")
             Vertex followerVertex = vertices.find {
-                it.properties.content == follower
+                it.properties[Word.CONTENT] == follower
             }
             Vertex wordVertex = vertices.find {
-                it.properties.content == word
+                it.properties[Word.CONTENT] == word
             }
 
             if (!followerVertex) {
-                followerVertex = graph.addVertex("class:Word", "content", follower)
+                followerVertex = graph.addVertex("class:${Word.CLASS}", Word.CONTENT, follower)
             }
             if (!wordVertex) {
-                wordVertex = graph.addVertex("class:Word", "content", word)
+                wordVertex = graph.addVertex("class:${Word.CLASS}", Word.CONTENT, word)
             }
 
-            Edge follows = wordVertex.getEdges(Direction.IN, "follows").find({it.getVertex(Direction.OUT).properties.content == follower}) as Edge
-            if (!follows) follows = wordVertex.addEdge("follows", followerVertex)
-            if (follows.properties.count == null)
-                follows.setProperty "count", 0
+            Edge follows = wordVertex.getEdges(Direction.IN, Follows.CLASS).find({it.getVertex(Direction.OUT).properties[Word.CONTENT] == follower}) as Edge
+            if (!follows) follows = wordVertex.addEdge(Follows.CLASS, followerVertex)
+            if (follows.properties[Follows.COUNT] == null)
+                follows.setProperty Follows.COUNT, 0
             else
-                follows.setProperty "count", follows.properties.count + 1
+                follows.setProperty Follows.COUNT, follows.properties[Follows.COUNT] + 1
 
             "done"
         }
@@ -51,25 +45,25 @@ class WordService extends GraphTransactionalService {
     def getWords() {
         withTransaction { OrientGraph graph ->
             def words = []
-            def vertices = graph.getVerticesOfClass("Word")
+            def vertices = graph.getVerticesOfClass(Word.CLASS)
             vertices.each { word ->
                 def jsonWord = [:]
                 jsonWord.rid = word.id.toString()
-                jsonWord.content = word.properties.content
+                jsonWord.content = word.properties[Word.CONTENT]
 
-                word.getEdges(Direction.IN, "Follows").each { edge ->
+                word.getEdges(Direction.IN, Follows.CLASS).each { edge ->
                     if (!jsonWord.followsIn) jsonWord.followsIn = []
-                    jsonWord.followsIn << [word: edge.getVertex(Direction.OUT).properties.content, count: edge.properties.count]
+                    jsonWord.followsIn << [word: edge.getVertex(Direction.OUT).properties[Word.CONTENT], count: edge.properties[Follows.COUNT]]
                 }
-                word.getEdges(Direction.OUT, "Follows").each { edge ->
+                word.getEdges(Direction.OUT, Follows.CLASS).each { edge ->
                     if (!jsonWord.followsOut) jsonWord.followsOut = []
-                    jsonWord.followsOut << [word: edge.getVertex(Direction.IN).properties.content, count: edge.properties.count]
+                    jsonWord.followsOut << [word: edge.getVertex(Direction.IN).properties[Word.CONTENT], count: edge.properties[Follows.COUNT]]
                 }
 
                 words << jsonWord
             }
 
-            words
+            [words: words]
         }
     }
 }
