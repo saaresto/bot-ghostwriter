@@ -28,13 +28,15 @@ repositories {
 
 dependencies {
 	compile('org.springframework.boot:spring-boot-starter-web')
-	compile('org.codehaus.groovy:groovy')
+	compile('org.codehaus.groovy:groovy-all')
 	compile("com.orientechnologies:orientdb-core:2.1.11")
 	compile("com.orientechnologies:orientdb-client:2.1.11")
 	compile("com.orientechnologies:orientdb-graphdb:2.1.11") {
 		exclude group: 'org.codehaus.groovy', module: 'groovy'
 	}
 	compile "org.apache.commons:commons-lang3:3.4"
+	compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.5.0-RC2'
+
 
 	testCompile('org.springframework.boot:spring-boot-starter-test') 
 }

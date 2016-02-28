@@ -3,12 +3,16 @@ import com.iissakin.ghostwriter.knowledge.service.WordService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.context.annotation.Configuration
+import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @SpringBootApplication
 @RestController
+@EnableScheduling
+@Configuration
 class GhostwriterApplication {
 
 	@Autowired
@@ -16,11 +20,6 @@ class GhostwriterApplication {
 
 	static void main(String[] args) {
 		SpringApplication.run GhostwriterApplication, args
-	}
-
-	@RequestMapping(value = "/word/{content}")
-	def newWord(@PathVariable("content") String content) {
-		wordService.newWord(content)
 	}
 
 	@RequestMapping(value = "/{follower}/follows/{word}")
