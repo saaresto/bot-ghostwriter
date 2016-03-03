@@ -25,16 +25,16 @@ class WordService extends GraphTransactionalService {
             }
 
             if (!followerVertex) {
-                followerVertex = graph.addVertex("class:${Word.CLASS}", Word.CONTENT, follower)
+                followerVertex = graph.addVertex("class:${Word.CLASS}".toString(), Word.CONTENT, follower)
             }
             if (!wordVertex) {
-                wordVertex = graph.addVertex("class:${Word.CLASS}", Word.CONTENT, word)
+                wordVertex = graph.addVertex("class:${Word.CLASS}".toString(), Word.CONTENT, word)
             }
 
             Edge follows = wordVertex.getEdges(Direction.IN, Follows.CLASS).find({it.getVertex(Direction.OUT).properties[Word.CONTENT] == follower}) as Edge
-            if (!follows) follows = wordVertex.addEdge(Follows.CLASS, followerVertex)
+            if (!follows) follows = followerVertex.addEdge(Follows.CLASS, wordVertex)
             if (follows.properties[Follows.COUNT] == null)
-                follows.setProperty Follows.COUNT, 0
+                follows.setProperty Follows.COUNT, 1
             else
                 follows.setProperty Follows.COUNT, follows.properties[Follows.COUNT] + 1
 

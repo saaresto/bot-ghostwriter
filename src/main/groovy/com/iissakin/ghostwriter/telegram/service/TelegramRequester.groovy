@@ -23,7 +23,7 @@ class TelegramRequester {
     private final String API_KEY
     private final String BASE_URL = 'https://api.telegram.org/bot'
 
-    def getUpdates() {
+    def getAndProcessUpdates() {
         def offset = metadataService.getLastUpdateId()
         http.get(uri: BASE_URL + API_KEY + '/getUpdates', query: [offset: offset]) { resp, json ->
             List<Update> updates = []
