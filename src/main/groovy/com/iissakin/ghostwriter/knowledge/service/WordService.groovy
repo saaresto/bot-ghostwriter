@@ -1,5 +1,4 @@
 package com.iissakin.ghostwriter.knowledge.service
-
 import com.iissakin.ghostwriter.knowledge.util.Follows
 import com.iissakin.ghostwriter.knowledge.util.Word
 import com.tinkerpop.blueprints.Direction
@@ -14,7 +13,7 @@ import org.springframework.stereotype.Component
 @Component
 class WordService extends GraphTransactionalService {
 
-    def newRelation(String follower, String word) {
+    synchronized def newRelation(String follower, String word, Map props) {
         withTransaction { OrientGraph graph ->
             def vertices = graph.getVerticesOfClass("Word")
             Vertex followerVertex = vertices.find {
@@ -37,6 +36,27 @@ class WordService extends GraphTransactionalService {
                 follows.setProperty Follows.COUNT, 1
             else
                 follows.setProperty Follows.COUNT, follows.properties[Follows.COUNT] + 1
+
+
+            // get the artist
+            if (props.artist) {
+                Vertex v
+                def artists = graph.getVerticesOfClass("Artist")
+                if (!artists || !artists.find({it.properties.name == props.artist})) {
+                    v = graph.addVertex("class:Artist", "name", props.artist)
+                } else {
+                    v = artists.find({it.properties.name == props.artist}) as Vertex
+                }
+
+                Set<Vertex> set
+                if (follows.properties.artists) {
+                    set = follows.properties.artists
+                } else {
+                    set = new ArrayList<>()
+                }
+                set.add(v)
+                follows.setProperty("artists", set)
+            }
 
             "done"
         }

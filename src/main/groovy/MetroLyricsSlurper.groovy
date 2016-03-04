@@ -30,9 +30,11 @@ File root = new File(rootFolder)
                 try {
                     def songName = song.substring("http://www.metrolyrics.com/".length(), song.lastIndexOf("-${artistName}"))
                     File songFile = new File(artistFile, songName + '.txt')
-                    htmlParser = slurper.parse(song)
-                    def text = htmlParser.'**'.find {it.@id == 'lyrics-body-text'}.p.collect {it.text()}.join("\n")
-                    songFile << text
+                    if (songFile.length() < 1) {
+                        htmlParser = slurper.parse(song)
+                        def text = htmlParser.'**'.find {it.@id == 'lyrics-body-text'}.p.collect {it.text()}.join("\n")
+                        songFile << text
+                    }
                 } catch (Exception e) {
                     e.printStackTrace()
                 }

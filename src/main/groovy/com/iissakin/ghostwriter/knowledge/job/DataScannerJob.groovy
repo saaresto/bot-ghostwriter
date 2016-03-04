@@ -21,22 +21,27 @@ class DataScannerJob {
     @Value('${knowledge.files.folder}')
     String rootFolder
 
-    @Scheduled(fixedRate = 5000L)
+    @Scheduled(initialDelay = 5000L, fixedDelay = 5000L)
     void scan() {
         File root = new File(rootFolder)
 
-        root.eachFile(FileType.FILES) { file ->
-            if (file.length() > 0) {
-                processFile(file)
-                file.delete()
+        root.eachFile(FileType.DIRECTORIES) { dir ->
+            dir.eachFile(FileType.FILES) { file ->
+                if (file.length() > 0) {
+                    processFile(file, dir.name)
+                    file.delete()
+                }
             }
+            dir.delete()
         }
     }
 
-    def processFile(File file) {
+    def processFile(File file, String artist) {
         log.info("Processing ${file.name}")
         String lastWord
-        def lines = file.readLines('utf-8').collect({ it.replaceAll("[^A-Za-z0-9'-.\\s]", "") })
+        def lines = file.readLines('utf-8')
+                .findAll({it.length() > 1 && !it.startsWith("[")})
+                .collect({it.replaceAll("[^A-Za-z0-9-'.\\s]", "")})
         log.info("Total of ${lines.size()} rows")
 
         lines.each { line ->
@@ -48,7 +53,7 @@ class DataScannerJob {
 
                 if (currentWord == lastWord) return
 
-                wordService.newRelation(currentWord.toLowerCase(), lastWord.toLowerCase())
+                wordService.newRelation(currentWord.toLowerCase(), lastWord.toLowerCase(), [artist: artist])
                 lastWord = currentWord
             }
         }
