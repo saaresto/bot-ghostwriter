@@ -1,3 +1,5 @@
+package com.iissakin.ghostwriter.knowledge.job
+
 @Grab(group='org.ccil.cowan.tagsoup', module='tagsoup', version='1.2' )
 def tagsoupParser = new org.ccil.cowan.tagsoup.Parser()
 def slurper = new XmlSlurper(tagsoupParser)

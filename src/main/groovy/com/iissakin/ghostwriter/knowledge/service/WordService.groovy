@@ -52,7 +52,7 @@ class WordService extends GraphTransactionalService {
                 if (follows.properties.artists) {
                     set = follows.properties.artists
                 } else {
-                    set = new ArrayList<>()
+                    set = new HashSet<>()
                 }
                 set.add(v)
                 follows.setProperty("artists", set)

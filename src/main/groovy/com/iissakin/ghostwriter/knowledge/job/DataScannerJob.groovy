@@ -21,8 +21,12 @@ class DataScannerJob {
     @Value('${knowledge.files.folder}')
     String rootFolder
 
-    @Scheduled(initialDelay = 5000L, fixedDelay = 5000L)
+    @Value('${knowledge.files.scan}')
+    Boolean scan
+
+    @Scheduled(initialDelay = 5000L, fixedDelay = 3600000L)
     void scan() {
+        if (!scan) return
         File root = new File(rootFolder)
 
         root.eachFile(FileType.DIRECTORIES) { dir ->

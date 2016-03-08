@@ -9,16 +9,23 @@ package com.iissakin.ghostwriter.knowledge.util
  */
 
 class Word {
-    public static final String CLASS = "Word"
-    public static final String CONTENT = "content"
+    public static final String CLASS = 'Word'
+    public static final String CONTENT = 'content'
+    public static final String VOWEL_COUNT = 'vowel_count'
 }
 
 class Follows {
-    public static final String CLASS = "Follows"
-    public static final String COUNT = "count"
+    public static final String CLASS = 'Follows'
+    public static final String COUNT = 'count'
+    public static final String ARTISTS = 'artists'
 }
 
 class UpdatesTracker {
-    public static final String CLASS = "UpdatesTracker"
-    public static final String LAST = "last_update"
+    public static final String CLASS = 'UpdatesTracker'
+    public static final String LAST = 'last_update'
+}
+
+class Artist {
+    public static final String CLASS = 'Artist'
+    public static final String NAME = 'name'
 }
