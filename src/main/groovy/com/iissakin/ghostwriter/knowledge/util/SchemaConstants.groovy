@@ -12,6 +12,7 @@ class Word {
     public static final String CLASS = 'Word'
     public static final String CONTENT = 'content'
     public static final String VOWEL_COUNT = 'vowel_count'
+    public static final String METAPHONE = 'metaph'
 }
 
 class Follows {

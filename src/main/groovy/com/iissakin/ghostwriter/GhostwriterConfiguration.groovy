@@ -52,6 +52,7 @@ class GhostwriterConfiguration {
                 def wordClass = graph.createVertexType(Word.CLASS)
                 wordClass.createProperty(Word.CONTENT, OType.STRING).setMandatory(true)
                 wordClass.createProperty(Word.VOWEL_COUNT, OType.SHORT).setMandatory(true)
+                wordClass.createProperty(Word.METAPHONE, OType.STRING)
 
                 wordClass.createIndex("wordContentIndex", OClass.INDEX_TYPE.UNIQUE, Word.CONTENT)
             }

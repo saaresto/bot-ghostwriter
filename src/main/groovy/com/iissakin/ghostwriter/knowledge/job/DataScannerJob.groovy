@@ -1,8 +1,7 @@
 package com.iissakin.ghostwriter.knowledge.job
-
 import com.iissakin.ghostwriter.knowledge.service.WordService
-import groovy.io.FileType
 import groovy.util.logging.Slf4j
+import groovyx.gpars.GParsPool
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
@@ -28,25 +27,31 @@ class DataScannerJob {
     void scan() {
         if (!scan) return
         File root = new File(rootFolder)
-
-        root.eachFile(FileType.DIRECTORIES) { dir ->
-            dir.eachFile(FileType.FILES) { file ->
-                if (file.length() > 0) {
-                    processFile(file, dir.name)
-                    file.delete()
+        ArrayList<File> dirs = (root.listFiles() as ArrayList<File>).findAll({it.isDirectory()})
+        GParsPool.withPool(4) {
+            dirs.each { File dir ->
+                log.info("STARTED PROCESSING ${dir.name} DIRECTORY")
+                Arrays.asList(dir.listFiles()).each { file ->
+                    if (file.length() > 0) {
+                        processFile(file, dir.name)
+                    } else {
+                        file.delete()
+                    }
                 }
+                dir.delete()
             }
-            dir.delete()
         }
     }
 
     def processFile(File file, String artist) {
         log.info("Processing ${file.name}")
+        def start = System.currentTimeMillis()
         String lastWord
         def lines = file.readLines('utf-8')
                 .findAll({it.length() > 1 && !it.startsWith("[")})
                 .collect({it.replaceAll("[^A-Za-z0-9-'.\\s]", "")})
-        log.info("Total of ${lines.size()} rows")
+
+        def relations = []
 
         lines.each { line ->
             def words = line.split(" ")
@@ -57,10 +62,16 @@ class DataScannerJob {
 
                 if (currentWord == lastWord) return
 
-                wordService.newRelation(currentWord.toLowerCase(), lastWord.toLowerCase(), [artist: artist])
+                try {
+                    relations << [follower: currentWord.toLowerCase(), word: lastWord.toLowerCase(), props: [artist: artist]]
+                } catch (Exception e) {
+                    e.printStackTrace()
+                }
                 lastWord = currentWord
             }
         }
-        log.info("Finished processing ${file.name}")
+        wordService.newRelations relations
+        log.info("Finished processing ${file.name} with ${lines.size()} rows in ${(System.currentTimeMillis() - start) / 1000}s")
+        file.delete()
     }
 }
