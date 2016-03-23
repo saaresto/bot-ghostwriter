@@ -1,7 +1,8 @@
 package com.iissakin.ghostwriter.telegram.service
-
 import com.iissakin.ghostwriter.knowledge.service.MetadataService
+import com.iissakin.ghostwriter.knowledge.service.TextWriter
 import com.iissakin.ghostwriter.telegram.api.object.Update
+import groovy.util.logging.Slf4j
 import groovyx.net.http.HTTPBuilder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component
  * User: iissakin
  * Date: 28.02.2016.
  */
+@Slf4j
 @Component
 class TelegramRequester {
 
@@ -18,6 +20,9 @@ class TelegramRequester {
 
     @Autowired
     HTTPBuilder http
+
+    @Autowired
+    TextWriter writer
 
     @Value('${telegram.api.key}')
     private final String API_KEY
@@ -29,6 +34,7 @@ class TelegramRequester {
             List<Update> updates = []
             if (json.ok) {
                 json.result.each { update ->
+                    log.info("${update}")
                     updates << new Update(update as HashMap)
                 }
             }
@@ -42,9 +48,10 @@ class TelegramRequester {
 
     def processUpdates(List<Update> updates) {
         updates.each { update ->
+            def text = writer.generate()
             http.post(uri: BASE_URL + API_KEY + '/sendMessage',
                     body: [chat_id: update.message.chat.id,
-                           text: 'I am not yet implemented',
+                           text: text,
                            reply_to_message_id: update.message.messageId]) { resp ->
                 println "POST Success: ${resp.statusLine}"
             }

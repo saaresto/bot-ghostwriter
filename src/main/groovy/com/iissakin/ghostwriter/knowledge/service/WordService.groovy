@@ -19,10 +19,10 @@ import java.util.regex.Pattern
 class WordService extends GraphTransactionalService {
 
     def newRelations(relations) {
-        withTransaction { OrientGraph graph ->
+        withTransactionNoShutdown { OrientGraph graph ->
             relations.each { relation ->
                 try {
-                    newRelation(relation.follower, relation.word, relation.props)
+                    newRelation(graph, relation.follower, relation.word, relation.props)
                 } catch (Exception e) {
                     e.printStackTrace()
                 }
@@ -30,7 +30,7 @@ class WordService extends GraphTransactionalService {
         }
     }
 
-    def newRelation(String follower, String word, Map props) {
+    def newRelation(OrientGraph graph, String follower, String word, Map props) {
         def metaphone = new Metaphone()
         def vertices = graph.getVerticesOfClass("Word")
         Vertex followerVertex = vertices.find {
