@@ -12,7 +12,7 @@ class Word {
     public static final String CLASS = 'Word'
     public static final String CONTENT = 'content'
     public static final String VOWEL_COUNT = 'vowel_count'
-    public static final String METAPHONE = 'metaph'
+    public static final String METAPHONE = 'metaphone'
 }
 
 class Follows {
@@ -26,7 +26,7 @@ class UpdatesTracker {
     public static final String LAST = 'last_update'
 }
 
-class Artist {
-    public static final String CLASS = 'Artist'
+class Author {
+    public static final String CLASS = 'Author'
     public static final String NAME = 'name'
 }

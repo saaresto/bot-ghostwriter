@@ -60,7 +60,7 @@ class DataScannerJob {
                 if (!lastWord) lastWord = word // for the very first one
                 def currentWord = word
 
-                if (currentWord == lastWord) return
+                if (currentWord.toLowerCase() == lastWord.toLowerCase()) return
 
                 try {
                     relations << [follower: currentWord.toLowerCase(), word: lastWord.toLowerCase(), props: [artist: artist]]

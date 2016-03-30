@@ -47,7 +47,7 @@ class TelegramRequester {
     }
 
     def processUpdates(List<Update> updates) {
-        updates.each { update ->
+        updates.eachParallel { update ->
             def text = writer.generate()
             http.post(uri: BASE_URL + API_KEY + '/sendMessage',
                     body: [chat_id: update.message.chat.id,

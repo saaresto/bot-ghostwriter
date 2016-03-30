@@ -1,25 +1,65 @@
 package com.iissakin.ghostwriter.knowledge.service
+
+import com.iissakin.ghostwriter.knowledge.entity.WordEntity
 import com.iissakin.ghostwriter.knowledge.util.Follows
 import com.iissakin.ghostwriter.knowledge.util.Word
 import com.tinkerpop.blueprints.Direction
 import com.tinkerpop.blueprints.Edge
 import com.tinkerpop.blueprints.Vertex
 import com.tinkerpop.blueprints.impls.orient.OrientGraph
+import groovy.util.logging.Slf4j
 import org.apache.commons.codec.language.Metaphone
 import org.springframework.stereotype.Component
 
 import java.util.regex.Matcher
 import java.util.regex.Pattern
-
 /**
  * User: iissakin
  * Date: 27.02.2016.
  */
 @Component
+@Slf4j
 class WordService extends GraphTransactionalService {
 
+    static Set<WordEntity> cachedVertices = new HashSet<>()
+
+    /*@PostConstruct
+    def initializeCache() {
+        // TODO investigate necessity of such kind of caching
+        log.info("Cache initialization started.")
+        def start = System.currentTimeMillis()
+        withTransaction { OrientGraph graph ->
+            def wordVertices = graph.getVerticesOfClass(Word.CLASS)
+            cachedVertices = wordVertices.collect({ new WordEntity(it.properties) })
+
+            wordVertices.each { Vertex word ->
+                WordEntity entity = cachedVertices.find({it.content == word.properties[Word.CONTENT]}) ?: new WordEntity(word.properties)
+                if (!entity.followers) entity.followers = []
+
+                def followers = word.getEdges(Direction.IN, Follows.CLASS).collect({it.getVertex(Direction.OUT)})
+                followers.each { Vertex follower ->
+                    entity.followers << cachedVertices.find({it.content == follower.properties[Word.CONTENT]}) ?: new WordEntity(follower.properties)
+                }
+
+                cachedVertices << entity
+                log.info("Cache size: ${cachedVertices.size()}")
+            }
+
+            graph.getEdgesOfClass(Follows.CLASS).each { edge ->
+                def baseWord = cachedVertices.find{ word -> word.content == edge.getVertex(Direction.IN).properties[Word.CONTENT]}
+                def follower = cachedVertices.find{ word -> word.content == edge.getVertex(Direction.OUT).properties[Word.CONTENT]}
+
+                if (baseWord && follower) {
+                    if (!baseWord.followers) baseWord.followers = []
+                    baseWord.followers << follower
+                }
+            }
+        }
+        log.info("Cache initialization finished in ${(System.currentTimeMillis() - start) / 1000}s")
+    }*/
+
     def newRelations(relations) {
-        withTransactionNoShutdown { OrientGraph graph ->
+        withTransaction { OrientGraph graph ->
             relations.each { relation ->
                 try {
                     newRelation(graph, relation.follower, relation.word, relation.props)
@@ -64,9 +104,9 @@ class WordService extends GraphTransactionalService {
         // get the artist
         if (props.artist) {
             Vertex v
-            def artists = graph.getVerticesOfClass("Artist")
+            def artists = graph.getVerticesOfClass("Author")
             if (!artists || !artists.find({it.properties.name == props.artist})) {
-                v = graph.addVertex("class:Artist", "name", props.artist)
+                v = graph.addVertex("class:Author", "name", props.artist)
             } else {
                 v = artists.find({it.properties.name == props.artist}) as Vertex
             }
@@ -80,6 +120,22 @@ class WordService extends GraphTransactionalService {
             set.add(v)
             follows.setProperty("artists", set)
         }
+    }
+
+    int countVowelsRegex(String str) {
+        int count = 0;
+
+        if (str.length() > 0) {
+            // Create a pattern that detects vowels.
+            Pattern vowelPattern = Pattern.compile("[aeiou]");
+            Matcher vowelMatcher = vowelPattern.matcher(str);
+
+            // Look for the next match and if found, add to count and repeat.
+            while (vowelMatcher.find())
+                count++;
+        }
+
+        return count;
     }
 
     def getWords() {
@@ -105,21 +161,5 @@ class WordService extends GraphTransactionalService {
 
             [words: words]
         }
-    }
-
-    int countVowelsRegex(String str) {
-        int count = 0;
-
-        if (str.length() > 0) {
-            // Create a pattern that detects vowels.
-            Pattern vowelPattern = Pattern.compile("[aeiou]");
-            Matcher vowelMatcher = vowelPattern.matcher(str);
-
-            // Look for the next match and if found, add to count and repeat.
-            while (vowelMatcher.find())
-                count++;
-        }
-
-        return count;
     }
 }

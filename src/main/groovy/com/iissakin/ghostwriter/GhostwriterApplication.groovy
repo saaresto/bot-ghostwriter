@@ -1,4 +1,6 @@
 package com.iissakin.ghostwriter
+
+import com.iissakin.ghostwriter.knowledge.service.TextWriter
 import com.iissakin.ghostwriter.knowledge.service.WordService
 import com.iissakin.ghostwriter.telegram.job.UpdaterJob
 import org.springframework.beans.factory.annotation.Autowired
@@ -23,6 +25,9 @@ class GhostwriterApplication {
 	@Autowired
 	UpdaterJob job
 
+	@Autowired
+	TextWriter writer
+
 	static void main(String[] args) {
 		SpringApplication.run GhostwriterApplication, args
 	}
@@ -44,7 +49,7 @@ class GhostwriterApplication {
 	}
 
 	@RequestMapping(value = "/get")
-	def getWords() {
-		wordService.getWords()
+	def generate() {
+		writer.generate()
 	}
 }

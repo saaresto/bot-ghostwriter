@@ -5,6 +5,29 @@ def tagsoupParser = new org.ccil.cowan.tagsoup.Parser()
 def slurper = new XmlSlurper(tagsoupParser)
 def htmlParser
 
+def goodArtists = [
+        "http://www.metrolyrics.com/depeche-mode-lyrics.html",
+        "http://www.metrolyrics.com/muse-lyrics.html",
+        "http://www.metrolyrics.com/arctic-monkeys-lyrics.html",
+        "http://www.metrolyrics.com/hurts-lyrics.html",
+        "http://www.metrolyrics.com/lana-del-rey-lyrics.html",
+        "http://www.metrolyrics.com/disturbed-lyrics.html",
+        "http://www.metrolyrics.com/coldplay-lyrics.html",
+        "http://www.metrolyrics.com/metallica-lyrics.html",
+        "http://www.metrolyrics.com/nightwish-lyrics.html",
+        "http://www.metrolyrics.com/queen-lyrics.html",
+        "http://www.metrolyrics.com/papa-roach-lyrics.html",
+        "http://www.metrolyrics.com/poets-of-the-fall-lyrics.html",
+        "http://www.metrolyrics.com/linkin-park-lyrics.html",
+        "http://www.metrolyrics.com/fall-out-boy-lyrics.html",
+        "http://www.metrolyrics.com/three-days-grace-lyrics.html",
+        "http://www.metrolyrics.com/johnny-cash-lyrics.html",
+        "http://www.metrolyrics.com/30-seconds-to-mars-lyrics.html",
+        "http://www.metrolyrics.com/beatles-lyrics.html",
+        "http://www.metrolyrics.com/the-scorpions-lyrics.html",
+        "http://www.metrolyrics.com/skillet-lyrics.html"
+]
+
 def rootFolder = 'D:\\IntellijIdea\\ghostwriter-data'
 File root = new File(rootFolder)
 
@@ -20,7 +43,7 @@ File root = new File(rootFolder)
     htmlParser = slurper.parse(url)
     def artists = htmlParser.'**'.findAll {it.name() == 'a' && it.@class.toString() == 'image'}.collect {it.@href.toString()}
 
-    artists.each { artist ->
+    goodArtists.each { artist ->
         try {
             def artistName = artist.substring("http://www.metrolyrics.com/".length(), artist.lastIndexOf("-lyrics"))
             File artistFile = new File(root, artistName)

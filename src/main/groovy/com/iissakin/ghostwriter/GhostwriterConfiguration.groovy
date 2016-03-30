@@ -1,5 +1,5 @@
 package com.iissakin.ghostwriter
-import com.iissakin.ghostwriter.knowledge.util.Artist
+import com.iissakin.ghostwriter.knowledge.util.Author
 import com.iissakin.ghostwriter.knowledge.util.Follows
 import com.iissakin.ghostwriter.knowledge.util.UpdatesTracker
 import com.iissakin.ghostwriter.knowledge.util.Word
@@ -57,9 +57,9 @@ class GhostwriterConfiguration {
                 wordClass.createIndex("wordContentIndex", OClass.INDEX_TYPE.UNIQUE, Word.CONTENT)
             }
 
-            if (!graph.getVertexType(Artist.CLASS)) {
-                def artistClass = graph.createVertexType(Artist.CLASS)
-                artistClass.createProperty(Artist.NAME, OType.STRING).setMandatory(true)
+            if (!graph.getVertexType(Author.CLASS)) {
+                def artistClass = graph.createVertexType(Author.CLASS)
+                artistClass.createProperty(Author.NAME, OType.STRING).setMandatory(true)
             }
 
             if (!graph.getVertexType(UpdatesTracker.CLASS)) {
