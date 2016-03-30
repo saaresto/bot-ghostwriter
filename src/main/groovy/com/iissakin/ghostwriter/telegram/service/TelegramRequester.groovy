@@ -40,14 +40,14 @@ class TelegramRequester {
             }
 
             if (updates) {
-                metadataService.setLastUpdate(updates.collect({it.updateId}).max())
                 processUpdates(updates)
+                metadataService.setLastUpdate(updates.collect({it.updateId}).max())
             }
         }
     }
 
     def processUpdates(List<Update> updates) {
-        updates.eachParallel { update ->
+        updates.each { update ->
             def text = writer.generate()
             http.post(uri: BASE_URL + API_KEY + '/sendMessage',
                     body: [chat_id: update.message.chat.id,
