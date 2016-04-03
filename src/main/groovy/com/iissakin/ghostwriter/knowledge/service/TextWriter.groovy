@@ -1,6 +1,7 @@
 package com.iissakin.ghostwriter.knowledge.service
 
 import com.iissakin.ghostwriter.knowledge.util.Follows
+import com.iissakin.ghostwriter.knowledge.util.RandomUtils
 import com.iissakin.ghostwriter.knowledge.util.Word
 import com.tinkerpop.blueprints.Direction
 import com.tinkerpop.blueprints.Vertex
@@ -30,7 +31,7 @@ class TextWriter extends GraphTransactionalService {
 
     List<String> getLinesWithAbAbRhyme() {
         def lines = []
-        Vertex start = vertices[new Random().nextInt(vertices.size())]
+        Vertex start = vertices[RandomUtils.safeRandomIndex(vertices)]
         Vertex aVertex
         Vertex bVertex
 
@@ -59,12 +60,24 @@ class TextWriter extends GraphTransactionalService {
     }
 
     Vertex getNextWord(Vertex word) {
-        def followers = word.getEdges(Direction.IN, Follows.CLASS).collect({it.getVertex(Direction.OUT)})
+        def followers = word.getEdges(Direction.IN, Follows.CLASS).collect({new WordCountPair(count: it.properties[Follows.COUNT], word:it.getVertex(Direction.OUT))})
         getNextWord(followers)
     }
 
-    Vertex getNextWord(Iterable<Vertex> words) {
-        words[new Random().nextInt(words.size())]
+    Vertex getNextWord(Iterable<WordCountPair> words) {
+        // distribute
+        def rangeMap = [:]
+        long cursor = 1L
+        words.each { pair ->
+            def range = cursor..(cursor + pair.count - 1)
+            rangeMap[range] = pair.word
+            cursor += pair.count
+        }
+        def wholeCount = words*.count.sum() as Long
+        def randomIndex = new Random().nextInt(wholeCount as int) + 1
+
+        def asd = rangeMap.find {randomIndex in it.key}
+        return asd.value as Vertex
     }
 
     List<Vertex> getLineBasedOnVowels(Vertex start, Vertex rhymeOn) {
@@ -82,12 +95,12 @@ class TextWriter extends GraphTransactionalService {
         }
         // get the last word
         if (rhymeOn) {
-            def followers = current.getEdges(Direction.IN, Follows.CLASS).collect({it.getVertex(Direction.OUT)})
+            def followers = current.getEdges(Direction.IN, Follows.CLASS).collect({new WordCountPair(count: it.properties[Follows.COUNT], word:it.getVertex(Direction.OUT))})
             current = findByEqualLastLetters(followers, rhymeOn)
             line << current
         } else {
             current = getNextWord(current)
-            while ((current.properties[Word.CONTENT] as String).indexOf("'") != -1) {
+            while ((current.properties[Word.CONTENT] as String).indexOf("'") != -1 || (current.properties[Word.CONTENT] as String).length() < 2) {
                 current = getNextWord(current)
             }
             line << current
@@ -96,18 +109,18 @@ class TextWriter extends GraphTransactionalService {
         line
     }
 
-    Vertex findByEqualLastLetters(Iterable<Vertex> words, Vertex word) {
+    Vertex findByEqualLastLetters(Iterable<WordCountPair> words, Vertex word) {
         findByEqualLastLetters(words, word, (word.properties[Word.CONTENT] as String).length())
     }
 
-    Vertex findByEqualLastLetters(Iterable<Vertex> words, Vertex word, int amountOfLetters) {
+    Vertex findByEqualLastLetters(Iterable<WordCountPair> words, Vertex word, int amountOfLetters) {
         if (amountOfLetters > 4) amountOfLetters = 4 // default by now
 
         log.info("Trying to find a rhyme by ${amountOfLetters} letters for: ${word.properties.content}")
         try {
             if (amountOfLetters == 1) {
                 log.info("Couldn't find rhyme by last letters for word ${word.properties[Word.CONTENT]}")
-                return findByEqualLastLetters(vertices, word, (word.properties[Word.CONTENT] as String).length())
+                return findByEqualLastLetters(vertices.collect({new WordCountPair(count: 1L, word:it)}), word, (word.properties[Word.CONTENT] as String).length())
             }
         } catch (StackOverflowError sofe) {
             sofe.printStackTrace()
@@ -115,7 +128,7 @@ class TextWriter extends GraphTransactionalService {
         }
 
         def rhymingWords = words.findAll({
-            def content = it.properties[Word.CONTENT] as String
+            def content = it.word.properties[Word.CONTENT] as String
             def wordContent = word.properties[Word.CONTENT] as String
             return !(content.length() < amountOfLetters) && (content[-amountOfLetters..-1] == wordContent[-amountOfLetters..-1])
         })
@@ -128,6 +141,10 @@ class TextWriter extends GraphTransactionalService {
             return rhyme
         }
     }
+
+    /*
+    METAPHONE STUFF BELOW
+     */
 
     List<Vertex> getLineBasedOnMetaphone(Vertex start, Vertex rhymeOn) {
         def metaphoneLength = 20 // default
@@ -176,5 +193,10 @@ class TextWriter extends GraphTransactionalService {
         }) as Vertex
         log.info("Found: ${rhyme?.properties?.metaphone}")
         return rhyme ?: getNextWord(word)
+    }
+
+    private class WordCountPair {
+        Long count
+        Vertex word
     }
 }
