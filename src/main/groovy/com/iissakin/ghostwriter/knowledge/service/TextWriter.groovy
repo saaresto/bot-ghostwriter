@@ -43,17 +43,16 @@ class TextWriter extends GraphTransactionalService {
 
             if (lineNumber % 2 == 0) { // a
                 line = getLineBasedOnVowels(start, aVertex)
-//                line = getLineBasedOnMetaphone(start, aVertex)
                 aVertex = line[-1]
             } else { // b
                 line = getLineBasedOnVowels(start, bVertex)
-//                line = getLineBasedOnMetaphone(start, bVertex)
                 bVertex = line[-1]
             }
 
             start = getNextWord(start)
 
             lines << line.collect({it.properties[Word.CONTENT]}).join(" ")
+            if ((lineNumber + 1) % 4 == 0) lines << ""
         }
 
         lines
