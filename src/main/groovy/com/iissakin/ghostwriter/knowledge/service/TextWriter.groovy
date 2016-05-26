@@ -72,7 +72,7 @@ class TextWriter extends GraphTransactionalService {
             rangeMap[range] = pair.word
             cursor += pair.count
         }
-        def wholeCount = words*.count.sum() as Long
+        def wholeCount = words*.count.sum() as long
         def randomIndex = new Random().nextInt(wholeCount as int) + 1
 
         def asd = rangeMap.find {randomIndex in it.key}
@@ -115,16 +115,21 @@ class TextWriter extends GraphTransactionalService {
     Vertex findByEqualLastLetters(Iterable<WordCountPair> words, Vertex word, int amountOfLetters) {
         if (amountOfLetters > 4) amountOfLetters = 4 // default by now
 
-        log.info("Trying to find a rhyme by ${amountOfLetters} letters for: ${word.properties.content}")
+
         try {
             if (amountOfLetters == 1) {
                 log.info("Couldn't find rhyme by last letters for word ${word.properties[Word.CONTENT]}")
-                return findByEqualLastLetters(vertices.collect({new WordCountPair(count: 1L, word:it)}), word, (word.properties[Word.CONTENT] as String).length())
+                return findByEqualLastLetters(
+                        vertices.collect({new WordCountPair(count: 1L, word:it)}).findAll({it.word.properties[Word.CONTENT] != word.properties[Word.CONTENT]}),
+                        word,
+                        (word.properties[Word.CONTENT] as String).length()
+                )
             }
         } catch (StackOverflowError sofe) {
             sofe.printStackTrace()
             return getNextWord(words)
         }
+        log.info("Trying to find a rhyme by ${amountOfLetters} letters for: ${word.properties.content}")
 
         def rhymingWords = words.findAll({
             def content = it.word.properties[Word.CONTENT] as String
